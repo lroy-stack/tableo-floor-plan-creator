@@ -105,6 +105,23 @@ const FloorPlanManager: React.FC = () => {
     toast.success(`Mesa "${table?.name}" eliminada`);
   }, [tables]);
 
+  const handleAddElement = useCallback((element: Partial<CanvasElement>) => {
+    const newElement: CanvasElement = {
+      id: element.id || `element-${Date.now()}`,
+      type: element.type!,
+      x: element.x || 600,
+      y: element.y || 400,
+      width: element.width,
+      height: element.height,
+      rotation: element.rotation || 0,
+      properties: element.properties || {},
+      layer: element.layer || 1
+    };
+    
+    setElements(prev => [...prev, newElement]);
+    toast.success(`Elemento "${element.type}" agregado`);
+  }, []);
+
   const handleRestoreTable = useCallback((table: Table) => {
     const restoredTable: Table = {
       ...table,
@@ -160,6 +177,7 @@ const FloorPlanManager: React.FC = () => {
           {/* Left Panel - Elements */}
           <ElementsPanel
             onAddTable={handleAddTable}
+            onAddElement={handleAddElement}
             excludedTables={excludedTables}
             onRestoreTable={handleRestoreTable}
             className="flex-shrink-0"

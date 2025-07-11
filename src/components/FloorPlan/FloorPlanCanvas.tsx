@@ -3,6 +3,7 @@ import { ZoomIn, ZoomOut, RotateCcw, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Table, CanvasElement } from './types';
+import { ElementRenderer } from './ElementRenderer';
 
 interface FloorPlanCanvasProps {
   tables: Table[];
@@ -120,8 +121,9 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
     drawGrid(ctx);
     
     // Draw elements (walls, doors, etc.)
+    const renderer = new ElementRenderer(ctx);
     elements.forEach(element => {
-      // TODO: Implement element drawing
+      renderer.renderElement(element);
     });
     
     // Draw tables
