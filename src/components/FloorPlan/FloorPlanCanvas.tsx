@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Table, CanvasElement } from './types';
 import { ElementRenderer } from './ElementRenderer';
+import { CanvasToolbar } from './CanvasToolbar';
+import { CanvasStatusBar } from './CanvasStatusBar';
 
 interface FloorPlanCanvasProps {
   tables: Table[];
@@ -30,29 +30,34 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [draggedTable, setDraggedTable] = useState<Table | null>(null);
+  const [activeTool, setActiveTool] = useState<string>('select');
+  const [selectedCount, setSelectedCount] = useState(0);
 
   const GRID_SIZE = 20;
   const CANVAS_WIDTH = 1200;
   const CANVAS_HEIGHT = 800;
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = 'hsl(var(--canvas-grid))';
-    ctx.lineWidth = 0.5;
+    const gridOpacity = zoom > 0.5 ? 0.3 : 0.1;
+    ctx.strokeStyle = `hsla(var(--canvas-grid) / ${gridOpacity})`;
+    ctx.lineWidth = 0.5 / zoom;
     
-    for (let x = 0; x <= CANVAS_WIDTH; x += GRID_SIZE) {
+    const gridSpacing = GRID_SIZE * (zoom < 0.5 ? 2 : 1);
+    
+    for (let x = 0; x <= CANVAS_WIDTH; x += gridSpacing) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, CANVAS_HEIGHT);
       ctx.stroke();
     }
     
-    for (let y = 0; y <= CANVAS_HEIGHT; y += GRID_SIZE) {
+    for (let y = 0; y <= CANVAS_HEIGHT; y += gridSpacing) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(CANVAS_WIDTH, y);
       ctx.stroke();
     }
-  }, []);
+  }, [zoom]);
 
   const drawTable = useCallback((ctx: CanvasRenderingContext2D, table: Table) => {
     const { x, y, shape, capacity, name, id } = table;
@@ -61,15 +66,30 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
     
     ctx.save();
     
-    // Shadow
-    if (!isSelected) {
-      ctx.shadowColor = 'hsla(217, 91%, 50%, 0.15)';
-      ctx.shadowBlur = 4;
+    // Enhanced shadow system
+    if (isSelected) {
+      ctx.shadowColor = 'hsla(142, 76%, 36%, 0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+    } else {
+      ctx.shadowColor = 'hsla(217, 91%, 50%, 0.12)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
     }
     
-    // Table body
-    ctx.fillStyle = isSelected ? 'hsl(var(--table-selected))' : 'hsl(var(--table-active))';
+    // Gradient background
+    const gradient = ctx.createRadialGradient(x, y - size * 0.2, 0, x, y, size / 2);
+    if (isSelected) {
+      gradient.addColorStop(0, 'hsl(var(--table-selected))');
+      gradient.addColorStop(1, 'hsl(142 76% 30%)');
+    } else {
+      gradient.addColorStop(0, 'hsl(var(--table-active))');
+      gradient.addColorStop(1, 'hsl(217 91% 45%)');
+    }
+    
+    ctx.fillStyle = gradient;
     ctx.strokeStyle = isSelected ? 'hsl(var(--accent))' : 'hsl(var(--primary))';
     ctx.lineWidth = isSelected ? 3 : 2;
     
@@ -78,22 +98,52 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
       ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
+      
+      // Inner highlight
+      ctx.beginPath();
+      ctx.arc(x, y - size * 0.15, size / 4, 0, Math.PI, true);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     } else {
       const rectSize = size * 0.8;
-      ctx.fillRect(x - rectSize / 2, y - rectSize / 2, rectSize, rectSize);
-      ctx.strokeRect(x - rectSize / 2, y - rectSize / 2, rectSize, rectSize);
+      const radius = 4;
+      
+      // Rounded rectangle
+      ctx.beginPath();
+      ctx.roundRect(x - rectSize / 2, y - rectSize / 2, rectSize, rectSize, radius);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Inner highlight
+      ctx.beginPath();
+      ctx.roundRect(x - rectSize / 2 + 3, y - rectSize / 2 + 3, rectSize - 6, rectSize / 3, 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
     
-    // Table name
+    // Enhanced text with better contrast
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetY = 1;
+    
     ctx.fillStyle = 'white';
-    ctx.font = '12px sans-serif';
+    ctx.font = 'bold 12px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name, x, y);
+    ctx.fillText(name, x, y - 2);
     
-    // Capacity indicator
-    ctx.font = '10px sans-serif';
-    ctx.fillText(`${capacity.min}-${capacity.max}`, x, y + 15);
+    // Capacity with background
+    ctx.font = '10px system-ui, sans-serif';
+    const capacityText = `${capacity.min}-${capacity.max}`;
+    const textWidth = ctx.measureText(capacityText).width;
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(x - textWidth / 2 - 4, y + 8, textWidth + 8, 14);
+    
+    ctx.fillStyle = 'white';
+    ctx.fillText(capacityText, x, y + 15);
     
     ctx.restore();
   }, [selectedTable]);
@@ -113,9 +163,22 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
     ctx.scale(zoom, zoom);
     ctx.translate(pan.x, pan.y);
     
-    // Background
-    ctx.fillStyle = 'hsl(var(--canvas-bg))';
+    // Enhanced background with subtle texture
+    const bgGradient = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    bgGradient.addColorStop(0, 'hsl(212 25% 98%)');
+    bgGradient.addColorStop(1, 'hsl(210 20% 95%)');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Subtle texture overlay
+    ctx.globalAlpha = 0.02;
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * CANVAS_WIDTH;
+      const y = Math.random() * CANVAS_HEIGHT;
+      ctx.fillStyle = Math.random() > 0.5 ? '#000' : '#fff';
+      ctx.fillRect(x, y, 1, 1);
+    }
+    ctx.globalAlpha = 1;
     
     // Grid
     drawGrid(ctx);
@@ -202,59 +265,49 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
 
   const handleSave = () => {
     onSave();
-    toast.success('Mapa guardado exitosamente');
+    toast.success('Mapa guardado exitosamente', {
+      description: `${tables.length} mesas guardadas`,
+    });
   };
 
-  return (
-    <div className={`relative bg-canvas-bg border border-border rounded-lg overflow-hidden ${className}`}>
-      {/* Toolbar */}
-      <div className="absolute top-4 left-4 z-10 flex gap-2 bg-background/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-panel">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleZoom(0.1)}
-          className="h-8 w-8 p-0"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleZoom(-0.1)}
-          className="h-8 w-8 p-0"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-          className="h-8 w-8 p-0"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-        <div className="w-px bg-border" />
-        <Button
-          variant="default"
-          size="sm"
-          onClick={handleSave}
-          className="bg-gradient-primary hover:opacity-90"
-        >
-          <Save className="h-4 w-4 mr-1" />
-          Guardar
-        </Button>
-      </div>
+  const handleToolChange = (tool: string) => {
+    setActiveTool(tool);
+    // Here you could implement different tool behaviors
+  };
 
-      {/* Canvas */}
+  // Calculate total capacity
+  const totalCapacity = tables.reduce((sum, table) => sum + table.capacity.max, 0);
+
+  // Update selected count when selectedTable changes
+  useEffect(() => {
+    setSelectedCount(selectedTable ? 1 : 0);
+  }, [selectedTable]);
+
+  return (
+    <div className={`canvas-container relative ${className}`}>
+      {/* Enhanced Toolbar */}
+      <CanvasToolbar
+        zoom={zoom}
+        activeToolsCount={tables.length}
+        onZoomIn={() => handleZoom(0.1)}
+        onZoomOut={() => handleZoom(-0.1)}
+        onReset={handleReset}
+        onSave={handleSave}
+        activeTool={activeTool}
+        onToolChange={handleToolChange}
+      />
+
+      {/* Professional Canvas */}
       <canvas
         ref={canvasRef}
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
-        className="block cursor-crosshair"
+        className="block cursor-crosshair transition-all duration-300"
         style={{
           width: '100%',
           height: '100%',
-          maxHeight: '70vh'
+          maxHeight: '70vh',
+          filter: zoom < 0.3 ? 'contrast(1.1)' : 'none'
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -262,9 +315,18 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
         onMouseLeave={handleMouseUp}
       />
 
-      {/* Info panel */}
-      <div className="absolute bottom-4 right-4 bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 text-sm text-muted-foreground">
-        Zoom: {Math.round(zoom * 100)}% | Mesas: {tables.length}
+      {/* Enhanced Status Bar */}
+      <CanvasStatusBar
+        zoom={zoom}
+        tableCount={tables.length}
+        totalCapacity={totalCapacity}
+        selectedCount={selectedCount}
+        showGrid={true}
+      />
+
+      {/* Ambient overlay for depth */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/[0.02] rounded-lg" />
       </div>
     </div>
   );

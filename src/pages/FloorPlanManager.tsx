@@ -149,42 +149,74 @@ const FloorPlanManager: React.FC = () => {
   }, [activeTables, elements]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-card">
-        <div className="container mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+      {/* Professional Header */}
+      <div className="glass-panel border-b border-border/50 backdrop-blur-xl">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Editor de Mapa de Mesas
               </h1>
-              <p className="text-muted-foreground">
-                Gestiona la distribución de mesas de tu restaurante
+              <p className="text-muted-foreground text-lg">
+                Diseña y gestiona la distribución perfecta de tu restaurante
               </p>
+              <div className="flex items-center gap-4 pt-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-accent">
+                    Sistema activo
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Capacidad total: {activeTables.reduce((sum, table) => sum + table.capacity.max, 0)} personas
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Mesas activas: {activeTables.length}</span>
-              <span>•</span>
-              <span>Última modificación: Ahora</span>
+            
+            <div className="glass-panel rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between gap-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {activeTables.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Mesas activas
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-accent">
+                    {excludedTables.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Temporales
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground text-center border-t border-border/30 pt-2">
+                Última modificación: Ahora
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="flex gap-6 h-full">
-          {/* Left Panel - Elements */}
-          <ElementsPanel
-            onAddTable={handleAddTable}
-            onAddElement={handleAddElement}
-            excludedTables={excludedTables}
-            onRestoreTable={handleRestoreTable}
-            className="flex-shrink-0"
-          />
+      {/* Enhanced Main Content */}
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex gap-8 h-full min-h-[70vh]">
+          {/* Enhanced Left Panel */}
+          <div className="flex-shrink-0">
+            <ElementsPanel
+              onAddTable={handleAddTable}
+              onAddElement={handleAddElement}
+              excludedTables={excludedTables}
+              onRestoreTable={handleRestoreTable}
+              className="glass-panel rounded-xl shadow-strong"
+            />
+          </div>
 
-          {/* Center - Canvas */}
-          <div className="flex-1">
+          {/* Premium Canvas Area */}
+          <div className="flex-1 space-y-4">
             <FloorPlanCanvas
               tables={activeTables}
               elements={elements}
@@ -192,13 +224,13 @@ const FloorPlanManager: React.FC = () => {
               onTableSelect={handleTableSelect}
               onTableMove={handleTableMove}
               onSave={handleSave}
-              className="w-full"
+              className="w-full shadow-strong"
             />
           </div>
         </div>
       </div>
 
-      {/* Table Configuration Modal */}
+      {/* Enhanced Configuration Modal */}
       <TableConfigModal
         table={selectedTable}
         isOpen={isConfigModalOpen}
