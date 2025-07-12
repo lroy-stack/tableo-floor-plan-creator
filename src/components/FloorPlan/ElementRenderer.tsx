@@ -108,7 +108,7 @@ export class ElementRenderer {
     
     // Opening arc for swing doors
     if (door.doorType !== 'sliding') {
-      this.ctx.strokeStyle = 'hsla(var(--primary-rgb), 0.3)';
+      this.ctx.strokeStyle = 'hsla(217, 91%, 50%, 0.3)';
       this.ctx.lineWidth = 1;
       this.ctx.setLineDash([2, 2]);
       this.ctx.beginPath();
@@ -196,8 +196,8 @@ export class ElementRenderer {
     
     // Bar edge highlight
     const gradient = this.ctx.createLinearGradient(-width/2, -height/2, -width/2, height/2);
-    gradient.addColorStop(0, 'hsla(var(--primary-rgb), 0.2)');
-    gradient.addColorStop(1, 'hsla(var(--primary-rgb), 0)');
+    gradient.addColorStop(0, 'hsla(217, 91%, 50%, 0.2)');
+    gradient.addColorStop(1, 'hsla(217, 91%, 50%, 0)');
     
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(-width/2, -height/2, width, 10);
@@ -479,7 +479,7 @@ export class ElementRenderer {
 
   private addColumnDecorations(radius: number): void {
     // Add decorative rings
-    this.ctx.strokeStyle = 'hsla(var(--primary-rgb), 0.3)';
+    this.ctx.strokeStyle = 'hsla(217, 91%, 50%, 0.3)';
     this.ctx.lineWidth = 1;
     
     for (let i = 0; i < 3; i++) {
