@@ -39,7 +39,7 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
     const gridOpacity = zoom > 0.5 ? 0.3 : 0.1;
-    ctx.strokeStyle = `hsla(var(--canvas-grid) / ${gridOpacity})`;
+    ctx.strokeStyle = `hsla(214, 20%, 85%, ${gridOpacity})`;
     ctx.lineWidth = 0.5 / zoom;
     
     const gridSpacing = GRID_SIZE * (zoom < 0.5 ? 2 : 1);
@@ -82,15 +82,15 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
     // Gradient background
     const gradient = ctx.createRadialGradient(x, y - size * 0.2, 0, x, y, size / 2);
     if (isSelected) {
-      gradient.addColorStop(0, 'hsl(var(--table-selected))');
-      gradient.addColorStop(1, 'hsl(142 76% 30%)');
+      gradient.addColorStop(0, 'hsl(142, 76%, 36%)');
+      gradient.addColorStop(1, 'hsl(142, 76%, 30%)');
     } else {
-      gradient.addColorStop(0, 'hsl(var(--table-active))');
-      gradient.addColorStop(1, 'hsl(217 91% 45%)');
+      gradient.addColorStop(0, 'hsl(217, 91%, 50%)');
+      gradient.addColorStop(1, 'hsl(217, 91%, 45%)');
     }
     
     ctx.fillStyle = gradient;
-    ctx.strokeStyle = isSelected ? 'hsl(var(--accent))' : 'hsl(var(--primary))';
+    ctx.strokeStyle = isSelected ? 'hsl(142, 76%, 36%)' : 'hsl(217, 91%, 50%)';
     ctx.lineWidth = isSelected ? 3 : 2;
     
     if (shape === 'circular') {
