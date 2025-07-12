@@ -228,15 +228,17 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
     const pos = getMousePos(e);
     const table = getTableAt(pos.x, pos.y);
     
+    console.log('Mouse down at:', pos, 'Found table:', table);
+    
     if (table) {
       setDraggedTable(table);
       setDragStart({ x: pos.x - table.x, y: pos.y - table.y });
       onTableSelect(table);
+      setIsDragging(true);
     } else {
       onTableSelect(null);
+      setIsDragging(false);
     }
-    
-    setIsDragging(true);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -246,6 +248,7 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
     const newX = snapToGrid(pos.x - dragStart.x);
     const newY = snapToGrid(pos.y - dragStart.y);
     
+    console.log('Moving table to:', newX, newY);
     onTableMove(draggedTable.id, newX, newY);
   };
 
@@ -302,7 +305,7 @@ export const FloorPlanCanvas: React.FC<FloorPlanCanvasProps> = ({
         ref={canvasRef}
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
-        className="block cursor-crosshair transition-all duration-300"
+        className="block cursor-crosshair transition-all duration-300 touch-none"
         style={{
           width: '100%',
           height: '100%',
